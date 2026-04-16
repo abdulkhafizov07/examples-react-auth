@@ -61,24 +61,26 @@ export async function request(path, method = "GET", requestHeaders = {}) {
         headers["Authorization"] = `Bearer ${accessToken}`;
     }
 
-    const response = await fetch(`${apiUrl}${path}`, {
-        method,
-        headers,
-    });
+    while (true) {
+        const response = await fetch(`${apiUrl}${path}`, {
+            method,
+            headers,
+        });
 
-    if (response.status == 401) {
-        const refreshToken = getRefreshToken();
+        if (response.status == 401) {
+            const refreshToken = getRefreshToken();
 
-        if (refreshToken) {
-            try {
-                updateAccessToken();
-            } catch {
+            if (refreshToken) {
+                try {
+                    updateAccessToken(refreshToken);
+                } catch {
+                    throw response;
+                }
+            } else {
                 throw response;
             }
-        } else {
-            throw response;
         }
-    }
 
-    return response;
+        return response;
+    }
 }
